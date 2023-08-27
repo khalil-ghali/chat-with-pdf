@@ -1,6 +1,6 @@
 # MKG Research Assistant - PDF-based Q&A
 
-![MKG Research Assistant](app_screenshot.jpg)
+![MKG Research Assistant](app-screenshot.png)
 
 MKG Research Assistant is a tool designed to facilitate question and answer interactions based on PDF documents. This application comes in two versions: a free version that utilizes the Falcon 7b open source model, and an advanced version that requires an OpenAI API key for enhanced performance. With MKG Research Assistant, you can extract valuable information from PDFs and ask questions about their content, obtaining relevant answers quickly and efficiently.
 
