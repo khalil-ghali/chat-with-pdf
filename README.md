@@ -27,6 +27,10 @@ Before you begin, ensure you have the following installed:
     ```bash
     pip install -r requirements.txt
     ```
+4. Run the app:
+   ```bash
+    streamlit run app.py
+    ```
 ## How to Get Started
   1. Upload your Document.
   2. Enter your API key.(Only if you chose the premium version. Key is not needed in the free version)
