@@ -134,7 +134,7 @@ def free_version():
                                 while st.session_state['exit'] == False:
                                     
                                             #question = st.text_input("Once uploaded, you can chat with your document. Enter your question here or type exit to end and upload new documents:", key=f"question_input_{i}")
-                                            
+                                            with st.spinner('Generating Answer...'):
                                             
                                                 if question.lower() == 'exit':
                                                     st.session_state['exit'] = True
