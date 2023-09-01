@@ -37,5 +37,6 @@ Before you begin, ensure you have the following installed:
   2. Enter your API key.(Only if you chose the premium version. Key is not needed in the free version)
   3. Ask questions using any language you prefer.
   4. Get detailed, AI-generated answers also in the language you asked your question in. Isn´t that amazing :)
-  5. Enjoy a smarter way to read PDFs!   
+  5. Enjoy a smarter way to read PDFs!
+## Please Note that if you have a CUDA compatible graphic card, your app will run on GPU for faster processing, if you don't have it that's fine It will run on you CPU but a little slower.  
             
