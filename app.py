@@ -1,20 +1,14 @@
-%%writefile app.py
+
 import streamlit as st
-hide_streamlit_style = """
-            <style>
-            #MainMenu  {visibility: hidden;}
-            footer  {visibility: hidden;}
-            </style>
-            """
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 
 
 def free_version():
 
         import streamlit as st
 
-
-
+        from langchain.vectorstores import FAISS
+        import base64
         #from PyPDF2 import PdfReader
         from langchain.document_loaders import PyPDFLoader
         import torch
@@ -41,7 +35,7 @@ def free_version():
         st.title("MKG: Your Research Chat Buddy 📄🤖")
         llm=HuggingFaceHub(huggingfacehub_api_token=HUGGINGFACE_API_TOKEN,
                                 repo_id=repo_id,
-                                model_kwargs={"temperature":0.5, "max_new_tokens":1000})
+                                model_kwargs={"temperature":0.1, "max_new_tokens":1000})
 
 
 #os.environ['OPENAI_API_KEY'] = apikey
@@ -79,10 +73,32 @@ def free_version():
         def process_llm_response(llm_response,llm_originalresponse2):
             result_text = wrap_text_preserve_newlines(llm_originalresponse2)
             typewriter(result_text, speed=40)
+        def process_source (llm_response):
             st.write('\n\nSources:')
+            unique_sources = []
             for source in llm_response["source_documents"]:
-                typewriter(source.metadata['source'], speed=35)
+                source_name = source.metadata['source']
+                if source_name not in unique_sources:
+                    unique_sources.append(source_name)
+            for source in unique_sources:
+                        pdf_display = display_pdf(source)
+                        st.markdown(pdf_display, unsafe_allow_html=True)
+        def display_pdf(file_path):
+            """Display PDF file.
 
+            Args:
+                file_path (str): Path to the PDF file.
+
+            Returns:
+                str: PDF display in HTML format.
+            """
+
+            with open(file_path, "rb") as f:
+                base64_pdf = base64.b64encode(f.read()).decode("utf-8")
+            pdf_display = (
+                f'<embed src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf">'
+            )
+            return pdf_display
 
         def save_uploaded_pdfs(uploaded_files):
         # Save uploaded PDF files to the "PDFs" directory
@@ -110,33 +126,33 @@ def free_version():
             if uploaded_files and submit_button:
                                 save_uploaded_pdfs(uploaded_files)
                                 loader = DirectoryLoader('./PDFs', glob="./*.pdf", loader_cls=PyPDFLoader)
-                        with st.spinner('Processing the Documents...'):
-                                documents = loader.load()
-                                text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
-                                texts = text_splitter.split_documents(documents)
+                                with st.spinner('Processing the Documents...'):
+                                  documents = loader.load()
+                                  text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=50)
+                                  texts = text_splitter.split_documents(documents)
                                 #instructor_embeddings = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-xl",
-                        with st.spinner('Processing Embeddings...'):                                                          #model_kwargs={"device": "cuda"})
-                                model_name = "BAAI/bge-base-en"
-                                encode_kwargs = {'normalize_embeddings': True}
-                                instructor_embeddings =instructor_embeddings = HuggingFaceBgeEmbeddings(
-    model_name=model_name,
-    model_kwargs={'device': 'cuda' if torch.cuda.is_available() else 'cpu'},
-    encode_kwargs=encode_kwargs
-)
-                                persist_directory = 'db'
+                                with st.spinner('Processing Embeddings...'):                                                          #model_kwargs={"device": "cuda"})
+                                  model_name = "BAAI/bge-base-en"
+                                  encode_kwargs = {'normalize_embeddings': True}
+                                  instructor_embeddings =instructor_embeddings = HuggingFaceBgeEmbeddings(
+      model_name=model_name,
+      model_kwargs={'device': 'cuda' if torch.cuda.is_available() else 'cpu'},
+      encode_kwargs=encode_kwargs
+  )
+                                  persist_directory = 'db'
 
-                                ## Here is the new embeddings being used
-                                embedding = instructor_embeddings
+                                  ## Here is the new embeddings being used
+                                  embedding = instructor_embeddings
+                                  if os.path.exists(persist_directory):
+                                      shutil.rmtree(persist_directory)
+                                  vectordb = Chroma.from_documents(documents=texts,embedding=embedding, persist_directory=persist_directory)
+                                  #vectordb= FAISS.from_documents(texts, embedding)
+                                  retriever = vectordb.as_retriever(search_kwargs={"k": 3})
 
-                                vectordb = Chroma.from_documents(documents=texts,
-                                                                embedding=embedding)
-
-                                retriever = vectordb.as_retriever(search_kwargs={"k": 3})
-
-                                qa_chain = RetrievalQA.from_chain_type(llm=llm,
-                                                                    chain_type="stuff",
-                                                                    retriever=retriever,
-                                                                    return_source_documents=True)
+                                  qa_chain = RetrievalQA.from_chain_type(llm=llm,
+                                                                      chain_type="stuff",
+                                                                      retriever=retriever,
+                                                                      return_source_documents=True)
                                 # Initial state
 
                                 while st.session_state['exit'] == False:
@@ -162,6 +178,7 @@ def free_version():
                                                             translated_chunks.append(translated_chunk)
                                                     llm_originalresponse2=''.join(translated_chunks)
                                                     process_llm_response(llm_originalresponse,llm_originalresponse2)
+                                                    process_source (llm_originalresponse)
 
                                                     break
 
@@ -190,11 +207,11 @@ def paid_version():
         import streamlit as st
 
 
-        from PyPDF2 import PdfReader
+
         from langchain.agents import create_csv_agent
         from langchain.llms import OpenAI
         import os
-        from apikey import apikey
+        #from apikey import apikey
         from langchain.document_loaders import TextLoader
         from langchain.indexes import VectorstoreIndexCreator
         import time
@@ -202,7 +219,7 @@ def paid_version():
 
         from langchain.embeddings.openai import OpenAIEmbeddings
         from langchain.text_splitter import CharacterTextSplitter
-        from langchain.vectorstores import FAISS
+        #from langchain.vectorstores import FAISS
         from langchain.chains.question_answering import load_qa_chain
         from langchain.llms import OpenAI
         import streamlit as st
@@ -304,7 +321,7 @@ def intro():
 
             ## Standout Features
 
-            - AI-Powered Q&A: Upload your PDF (supports also CSV in the premium version), enter your API key, and ask questions. Get precise answers like a personal Q&A expert! 💭🤖
+            - AI-Powered Q&A: Upload your PDF , enter your API key, and ask questions. Get precise answers like a personal Q&A expert! 💭🤖
 
             ## How to Get Started
 
@@ -318,7 +335,7 @@ def intro():
             ## Explore More
 
             - Open Source Edition: Free with basic features.
-            - Premium Edition: Unlocks advanced capabilities, including CSV and spreadsheet Q&A, using your OpenAI API key.
+            - Premium Edition: Unlocks advanced capabilities using your OpenAI API key.
 
             ## It is Time to Dive in!
 
@@ -341,4 +358,3 @@ demo_name = st.sidebar.selectbox("Choose a version", page_names_to_funcs.keys())
 page_names_to_funcs[demo_name]()
 st.sidebar.markdown('<a href="https://www.linkedin.com/in/mohammed-khalil-ghali-11305119b/"> Connect on LinkedIn <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg" alt="LinkedIn" width="30" height="30"></a>', unsafe_allow_html=True)
 st.sidebar.markdown('<a href="https://github.com/khalil-ghali"> Check out my GitHub <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" alt="GitHub" width="30" height="30"></a>', unsafe_allow_html=True)
-st.sidebar.markdown('<a href="https://portfolio.mohammedkhalilghali.com"> Check out my GitHub <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" alt="Portfolio" width="30" height="30"></a>', unsafe_allow_html=True)
