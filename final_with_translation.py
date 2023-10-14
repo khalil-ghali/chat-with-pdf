@@ -35,7 +35,7 @@ def free_version():
         import shutil
         from deep_translator import GoogleTranslator 
         from langdetect import detect
-        HUGGINGFACE_API_TOKEN = "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"
+        HUGGINGFACE_API_TOKEN = "your Huggingfaceaccesstoken" #you can get it from huggingface for free
         repo_id = "tiiuae/falcon-7b-instruct"
         st.title("MKG: Your Research Chat Buddy 📄🤖")
         llm=HuggingFaceHub(huggingfacehub_api_token=HUGGINGFACE_API_TOKEN,
